@@ -228,17 +228,25 @@ class EZCrypto {
     );
 
     // Step 2) Export keys to SPKI|PKCS8 format
-    let b64Keys = await Promise.all([
-      window.crypto.subtle.exportKey("spki", keys.publicKey).then((key) => {
-        return this.arrayToBase64(new Uint8Array(key));
-      }),
-      window.crypto.subtle.exportKey("pkcs8", keys.privateKey).then((key) => {
-        return this.arrayToBase64(new Uint8Array(key));
-      }),
+    let exportKeys = await Promise.all([
+        window.crypto.subtle.exportKey("spki", keys.publicKey).then((key) => {
+          return this.arrayToBase64(new Uint8Array(key));
+        }),
+        window.crypto.subtle.exportKey("pkcs8", keys.privateKey).then((key) => {
+          return this.arrayToBase64(new Uint8Array(key));
+        }),
+        
+        window.crypto.subtle.exportKey("jwk", keys.publicKey).then((key) => {
+          return key;
+        }),
+        window.crypto.subtle.exportKey("jwk", keys.privateKey).then((key) => {
+          return key;
+        })
     ]);
+    
 
     // Step 3) Convert the keys to base64 and return...
-    return { publicKey: b64Keys[0], privateKey: b64Keys[1] };
+    return { publicKey: exportKeys[0], privateKey: exportKeys[1], jwkPublicKey: exportKeys[2], jwkPrivateKey: exportKeys[3] };
   };
 
   // //////////////////////////////////////////////////////////////////////////
