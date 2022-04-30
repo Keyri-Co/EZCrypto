@@ -5,7 +5,7 @@
 // Class with methods to make working with subtle crypto
 // easier and more obvious
 //
-class EZCrypto {
+export class EZCrypto {
   constructor() {}
 
   // //////////////////////////////////////////////////////////////////////////
