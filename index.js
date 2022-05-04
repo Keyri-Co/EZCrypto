@@ -250,7 +250,7 @@ export class EZCrypto {
     let keys = await window.crypto.subtle.generateKey(
       { name: "ECDH", namedCurve: "P-256" },
       true,
-      ["deriveKey"]
+      ["deriveKey","deriveBits"]
     );
 
     // Step 2) Export keys to SPKI|PKCS8|JWK|RAW format
