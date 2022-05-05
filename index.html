@@ -1,6 +1,15 @@
 <!DOCTYPE html>
-<script src="./index.js"></script>
-<script>
+<script type="module">
+  import {EZCrypto} from "./index.js";
   let ez = new EZCrypto();
+  
+  let keys = await ez.EcMakeCryptKeys();
+  
+  let converts = [];
+  converts.push(await ez.EcConvertKey(keys.publicKey));
+  converts.push(await ez.EcConvertKey(keys.privateKey));
+  converts.push(await ez.EcConvertKey(keys.rawPublicKey));
+  converts.push(await ez.EcConvertKey(keys.rawPublicKeyLite));
+  console.log(converts);
 
 </script>

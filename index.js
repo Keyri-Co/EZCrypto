@@ -269,12 +269,22 @@ export class EZCrypto {
         }),
         window.crypto.subtle.exportKey("raw", keys.publicKey).then((key) => {
           return this.arrayToBase64( new Uint8Array(key));
+        }),
+        window.crypto.subtle.exportKey("raw", keys.publicKey).then((key) => {
+          return this.arrayToBase64( new Uint8Array(key).slice(1,1000));
         })
     ]);
     
 
     // Step 3) Convert the keys to base64 and return...
-    return { publicKey: exportKeys[0], privateKey: exportKeys[1], jwkPublicKey: exportKeys[2], jwkPrivateKey: exportKeys[3], rawPublicKey: exportKeys[4]};
+    return { 
+      publicKey: exportKeys[0], 
+      privateKey: exportKeys[1], 
+      jwkPublicKey: exportKeys[2], 
+      jwkPrivateKey: exportKeys[3], 
+      rawPublicKey: exportKeys[4],
+      rawPublicKeyLite: exportKeys[5]
+    };
   };
 
   // //////////////////////////////////////////////////////////////////////////
@@ -526,7 +536,7 @@ export class EZCrypto {
     
     let key;
     
-    // 2.) Try loading it as SPKI ECDH public
+    // SPKI PUBLIC?
     try {
       key = await window.crypto.subtle.importKey(
         "spki",
@@ -539,7 +549,7 @@ export class EZCrypto {
       return key;
     } catch(e){
 
-      
+      // RAW PUBLIC
       try {
         key = await window.crypto.subtle.importKey(
           "raw",
@@ -552,6 +562,7 @@ export class EZCrypto {
         return key;
       } catch(e){
         
+        // PKCS8 PRIVATE
         try{
           let key = await window.crypto.subtle.importKey(
             "pkcs8",
@@ -563,7 +574,26 @@ export class EZCrypto {
             
           return key;
         } catch(e){
-          console.log(e,"FAILED PRIVATE ECDH-PKCS");
+          
+          // RAW PUBLIC - PERVERTED
+          try {
+            
+            let longKey = new Uint8Array([4].concat(Array.from(this.base64ToArray(base64key))));
+            
+            key = await window.crypto.subtle.importKey(
+              "raw",
+              longKey,
+              { name: "ECDH", namedCurve: "P-256" },
+              true,
+              []
+            );
+            
+            return key;
+          } catch(e){
+            
+            console.log(e,"FAILED PRIVATE ECDH-PKCS");
+            throw new Error("Unrecognized Key Format");
+          }
         }
       }
     }
