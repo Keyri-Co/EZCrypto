@@ -3,13 +3,14 @@
   import {EZCrypto} from "./index.js";
   let ez = new EZCrypto();
   
-  let keys = await ez.EcMakeCryptKeys();
   
-  let converts = [];
-  converts.push(await ez.EcConvertKey(keys.publicKey));
-  converts.push(await ez.EcConvertKey(keys.privateKey));
-  converts.push(await ez.EcConvertKey(keys.rawPublicKey));
-  converts.push(await ez.EcConvertKey(keys.rawPublicKeyLite));
-  console.log(converts);
+  let keys = await ez.EcMakeCryptKeys();
+  let encryptedData = await ez.HKDFEncrypt(keys.privateKey, keys.publicKey, ez.arrayToBase64(new TextEncoder().encode("THEY'RE ALL GOOD PUPS. AND THEY SAVED THE DAY. AND NOW IT'S TIME TO PLAY AROUND ADVENTURE BAY")))
+  let decryptedData = await ez.HKDFDecrypt(keys.privateKey, keys.publicKey, encryptedData.salt, encryptedData.ciphertext);
+  
+  
+  console.log({keys, encryptedData, "decrypted": new TextDecoder().decode(decryptedData)});
+
+
 
 </script>
