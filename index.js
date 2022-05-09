@@ -245,35 +245,58 @@ export class EZCrypto {
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-  EcMakeCryptKeys = async () => {
+  EcMakeCryptKeys = async (exportable = true) => {
     // Step 1) Create ECDH KeyS
     let keys = await window.crypto.subtle.generateKey(
       { name: "ECDH", namedCurve: "P-256" },
-      true,
+      exportable,
       ["deriveKey","deriveBits"]
     );
 
     // Step 2) Export keys to SPKI|PKCS8|JWK|RAW format
-    let exportKeys = await Promise.all([
-        window.crypto.subtle.exportKey("spki", keys.publicKey).then((key) => {
-          return this.arrayToBase64(new Uint8Array(key));
-        }),
-        window.crypto.subtle.exportKey("pkcs8", keys.privateKey).then((key) => {
-          return this.arrayToBase64(new Uint8Array(key));
-        }),
-        window.crypto.subtle.exportKey("jwk", keys.publicKey).then((key) => {
-          return (key);
-        }),
-        window.crypto.subtle.exportKey("jwk", keys.privateKey).then((key) => {
-          return (key);
-        }),
-        window.crypto.subtle.exportKey("raw", keys.publicKey).then((key) => {
-          return this.arrayToBase64( new Uint8Array(key));
-        }),
-        window.crypto.subtle.exportKey("raw", keys.publicKey).then((key) => {
-          return this.arrayToBase64( new Uint8Array(key).slice(1,1000));
-        })
-    ]);
+    let exportKeys;
+
+    if(exportable){
+      exportKeys = await Promise.all([
+          window.crypto.subtle.exportKey("spki", keys.publicKey).then((key) => {
+            return this.arrayToBase64(new Uint8Array(key));
+          }),
+          window.crypto.subtle.exportKey("pkcs8", keys.privateKey).then((key) => {
+            return this.arrayToBase64(new Uint8Array(key));
+          }),
+          window.crypto.subtle.exportKey("jwk", keys.publicKey).then((key) => {
+            return (key);
+          }),
+          window.crypto.subtle.exportKey("jwk", keys.privateKey).then((key) => {
+            return (key);
+          }),
+          window.crypto.subtle.exportKey("raw", keys.publicKey).then((key) => {
+            return this.arrayToBase64( new Uint8Array(key));
+          }),
+          window.crypto.subtle.exportKey("raw", keys.publicKey).then((key) => {
+            return this.arrayToBase64( new Uint8Array(key).slice(1,1000));
+          })
+      ]);
+      
+    } else {
+      exportKeys = await Promise.all([
+          window.crypto.subtle.exportKey("spki", keys.publicKey).then((key) => {
+            return this.arrayToBase64(new Uint8Array(key));
+          }),
+          (new Promise((s,j) => {return s(keys.privateKey)})),
+          window.crypto.subtle.exportKey("jwk", keys.publicKey).then((key) => {
+            return (key);
+          }),
+          (new Promise((s,j) => {return s(keys.privateKey)})),
+          window.crypto.subtle.exportKey("raw", keys.publicKey).then((key) => {
+            return this.arrayToBase64( new Uint8Array(key));
+          }),
+          window.crypto.subtle.exportKey("raw", keys.publicKey).then((key) => {
+            return this.arrayToBase64( new Uint8Array(key).slice(1,1000));
+          })
+      ]);
+    }
+
     
 
     // Step 3) Convert the keys to base64 and return...
@@ -317,8 +340,6 @@ export class EZCrypto {
     let publicKey = await this.EcConvertKey(b64Public);
     let privateKey = await this.EcConvertKey(b64Private);
     
-    console.log("GOOD SO FAR!");
-  
     // 2.) generate shared key
     let aes_key = await window.crypto.subtle.deriveKey(
       { name: "ECDH", public: publicKey },
@@ -332,10 +353,7 @@ export class EZCrypto {
     let aes_key_raw = await window.crypto.subtle.exportKey("raw",aes_key);
     
     // 4.) convert that to base64
-    console.log(aes_key_raw);
     let b64_aes_key = this.arrayToBase64(new Uint8Array(aes_key_raw));
-    
-    console.log(b64_aes_key);
     
     // 5.) Work smarter, not harder, dummy...
     return await this.AESEncrypt(b64_aes_key, b64data);
@@ -383,8 +401,6 @@ export class EZCrypto {
       true,
       ["encrypt", "decrypt"]
     );
-    
-    console.log({aes_key});
 
     // 4.) encrypt our data
     return await window.crypto.subtle.decrypt(
@@ -672,14 +688,9 @@ export class EZCrypto {
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
   EcSignData = async (b64PrivateKey, b64data) => {
+    
     // 1.) convert the given keys to real keys
-    let privateKey = await window.crypto.subtle.importKey(
-      "pkcs8",
-      this.base64ToArray(b64PrivateKey),
-      { name: "ECDSA", namedCurve: "P-256" },
-      true,
-      ["sign"]
-    );
+    let privateKey = await this.ecConvertKey(b64PublicKey);
 
     // 2.) sign the data with the live key
     let signature = await window.crypto.subtle.sign({"name": "ECDSA", "hash": {"name": "SHA-256"}}, privateKey, this.base64ToArray(b64data));
@@ -708,25 +719,16 @@ export class EZCrypto {
 
   EcVerifySig = async (b64PublicKey, b64Signature, b64data) => {
 
-
-    
     // 1.) convert the given keys to real keys
-    let publicKey = await window.crypto.subtle.importKey(
-      "spki",
-      this.base64ToArray(b64PublicKey),
-      { name: "ECDSA", namedCurve: "P-256" },
-      true,
-      ["verify"]
-    );
+    let publicKey = await this.EcConvertKey(b64PublicKey);
     
 
     // 2.) Convert the signature to an array
     let signature = this.base64ToArray(b64Signature);
 
     // 3.) verify the data with the live key
-    return await window.crypto.subtle.verify({"name": "ECDSA", "hash": {"name": "SHA-256"}}, publicKey, signature, this.base64ToArray(data));
+    return await window.crypto.subtle.verify({"name": "ECDSA", "hash": {"name": "SHA-256"}}, publicKey, signature, this.base64ToArray(b64data));
 
-  
   };
   
   
