@@ -337,8 +337,8 @@ export class EZCrypto {
 
     // 1.) convert the given keys to real keys in the most
     //     generic way possible...
-    let publicKey = await this.EcConvertKey(b64Public);
-    let privateKey = await this.EcConvertKey(b64Private);
+    let publicKey = await this.EcdhConvertKey(b64Public);
+    let privateKey = await this.EcdhConvertKey(b64Private);
     
     // 2.) generate shared key
     let aes_key = await window.crypto.subtle.deriveKey(
@@ -388,8 +388,8 @@ export class EZCrypto {
 
     // 1.) convert the given keys to real keys in the most
     //     generic way possible...
-    let publicKey = await this.EcConvertKey(b64Public);
-    let privateKey = await this.EcConvertKey(b64Private);
+    let publicKey = await this.EcdhConvertKey(b64Public);
+    let privateKey = await this.EcdhConvertKey(b64Private);
     let nonce = this.base64ToArray(b64Nonce);
     let data = this.base64ToArray(b64data);
 
@@ -456,8 +456,8 @@ export class EZCrypto {
 
     // 1.) convert the given keys to real keys in the most
     //     generic way possible...
-    let publicKey = await this.EcConvertKey(b64Public);
-    let privateKey = await this.EcConvertKey(b64Private);
+    let publicKey = await this.EcdhConvertKey(b64Public);
+    let privateKey = await this.EcdhConvertKey(b64Private);
     
     // 2.) generate shared secret for HKDF
     //
@@ -509,11 +509,16 @@ export class EZCrypto {
       ["encrypt","decrypt"]
     );
     
+    // 7.) Init Vector
+    //
+    //
+    let iv = window.crypto.getRandomValues(new Uint8Array(16));
+    
     // 7.) Encrypt
     //
     //
     let encrypted = await window.crypto.subtle.encrypt(
-      { name: "AES-GCM", iv: salt },
+      { name: "AES-GCM", iv: iv },
       aes_key,
       this.base64ToArray(b64data)
     );
@@ -521,7 +526,8 @@ export class EZCrypto {
     // 8.) Base64 and return our data...
     return {
       "ciphertext": this.arrayToBase64(new Uint8Array(encrypted)),
-      "salt": this.arrayToBase64(salt)
+      "salt": this.arrayToBase64(salt),
+      "iv": this.arrayToBase64(iv)
     };
 
   
@@ -551,13 +557,14 @@ export class EZCrypto {
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-  HKDFDecrypt = async (b64Private, b64Public, b64Salt, b64data) => {
+  HKDFDecrypt = async (b64Private, b64Public, b64Salt, b64iv, b64data) => {
 
     // 1.) convert the given keys to real keys in the most
     //     generic way possible...
-    let publicKey = await this.EcConvertKey(b64Public);
-    let privateKey = await this.EcConvertKey(b64Private);
+    let publicKey = await this.EcdhConvertKey(b64Public);
+    let privateKey = await this.EcdhConvertKey(b64Private);
     let salt = this.base64ToArray(b64Salt);
+    let iv = this.base64ToArray(b64iv);
     let data = this.base64ToArray(b64data);
     
     
@@ -613,7 +620,7 @@ export class EZCrypto {
     // 6.) decrypt our data
     //
     return await window.crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: salt },
+      { name: "AES-GCM", iv: iv },
       aes_key,
       data
     );
@@ -690,7 +697,7 @@ export class EZCrypto {
   EcSignData = async (b64PrivateKey, b64data) => {
     
     // 1.) convert the given keys to real keys
-    let privateKey = await this.ecConvertKey(b64PublicKey);
+    let privateKey = await this.EcdsaConvertKey(b64PrivateKey);
 
     // 2.) sign the data with the live key
     let signature = await window.crypto.subtle.sign({"name": "ECDSA", "hash": {"name": "SHA-256"}}, privateKey, this.base64ToArray(b64data));
@@ -720,7 +727,7 @@ export class EZCrypto {
   EcVerifySig = async (b64PublicKey, b64Signature, b64data) => {
 
     // 1.) convert the given keys to real keys
-    let publicKey = await this.EcConvertKey(b64PublicKey);
+    let publicKey = await this.EcdsaConvertKey(b64PublicKey);
     
 
     // 2.) Convert the signature to an array
@@ -754,72 +761,224 @@ export class EZCrypto {
   
   
   
-  EcConvertKey = async (base64key) => {
-    
+  EcdhConvertKey = async (unknown_key) => {
+
     let key;
+    let longKey;
     
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // NATURAL KEY
+    if(unknown_key instanceof CryptoKey){
+      return unknown_key;
+    }
+    //
+    //
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     // SPKI PUBLIC?
+    //
+    //
     try {
+      
       key = await window.crypto.subtle.importKey(
         "spki",
-        this.base64ToArray(base64key),
+        this.base64ToArray(unknown_key),
         { name: "ECDH", namedCurve: "P-256" },
         true,
         []
       );
       
       return key;
-    } catch(e){
 
-      // RAW PUBLIC
-      try {
-        key = await window.crypto.subtle.importKey(
-          "raw",
-          this.base64ToArray(base64key),
-          { name: "ECDH", namedCurve: "P-256" },
-          true,
-          []
-        );
-        
-        return key;
-      } catch(e){
-        
-        // PKCS8 PRIVATE
-        try{
-          let key = await window.crypto.subtle.importKey(
-            "pkcs8",
-            this.base64ToArray(base64key),
-            { name: "ECDH", namedCurve: "P-256" },
-            true,
-            ["deriveKey","deriveBits"]
-          );
-            
-          return key;
-        } catch(e){
-          
-          // RAW PUBLIC - PERVERTED
-          try {
-            
-            let longKey = new Uint8Array([4].concat(Array.from(this.base64ToArray(base64key))));
-            
-            key = await window.crypto.subtle.importKey(
-              "raw",
-              longKey,
-              { name: "ECDH", namedCurve: "P-256" },
-              true,
-              []
-            );
-            
-            return key;
-          } catch(e){
-            
-            console.log(e,"FAILED PRIVATE ECDH-PKCS");
-            throw new Error("Unrecognized Key Format");
-          }
-        }
-      }
+    } catch(e){}
+    //
+    //
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // RAW PUBLIC
+    //
+    //
+    try {
+      
+      key = await window.crypto.subtle.importKey(
+        "raw",
+        this.base64ToArray(unknown_key),
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        []
+      );
+
+      return key;
+      
+    } catch(e){}
+    //
+    //
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // PKCS8 PRIVATE
+    //
+    //
+    try{
+      
+      key = await window.crypto.subtle.importKey(
+        "pkcs8",
+        this.base64ToArray(unknown_key),
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        ["deriveKey","deriveBits"]
+      );
+      
+    } catch(e){}
+    //
+    //
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // RAW PUBLIC - PERVERTED
+    //
+    //
+    try {
+      
+      longKey = new Uint8Array([4].concat(Array.from(this.base64ToArray(unknown_key))));
+      key = await window.crypto.subtle.importKey(
+        "raw",
+        longKey,
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        []
+      );
+      
+    } catch(e){}
+
+
+    throw new Error("UNRECOGNIZED KEY FORMAT");
+
+  }
+
+
+
+
+  // //////////////////////////////////////////////////////////////////////////
+  // //////////////////////////////////////////////////////////////////////////
+  //
+  // Function:     EcdsaConvertKey (some sort of key)
+  // What is this: Sloppy AF function to try converting random data into a key
+  //               until something works...
+  //
+  // Arguments:    none
+  //
+  // Returns:      hopefully a live key...probably an error and an hour of debugging.
+  // Notes:
+  //
+  // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  
+  EcdsaConvertKey = async (unknown_key) => {
+    
+    let key;
+    let longKey;
+    let err = true;
+    
+    
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // NATURAL KEY
+    if(unknown_key instanceof CryptoKey){
+      return unknown_key;
     }
-  };
+    
+    
+    //
+    //
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // SPKI PUBLIC?
+    //
+    //
+    try {
+      
+      key = await window.crypto.subtle.importKey(
+        "spki",
+        this.base64ToArray(unknown_key),
+        { name: "ECDSA", namedCurve: "P-256" },
+        true,
+        ["verify"]
+      );
+      
+      return key;
+      
+    } catch(e){}
+
+    //
+    //
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // RAW PUBLIC
+    //
+    //
+    try {
+      
+      key = await window.crypto.subtle.importKey(
+        "raw",
+        this.base64ToArray(unknown_key),
+        { name: "ECDSA", namedCurve: "P-256" },
+        true,
+        ["verify"]
+      );
+      
+      return key;
+      
+    } catch(e){}
+
+    //
+    //
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // PKCS8 PRIVATE
+    //
+    //
+    try{
+
+      key = await window.crypto.subtle.importKey(
+        "pkcs8",
+        this.base64ToArray(unknown_key),
+        { name: "ECDSA", namedCurve: "P-256" },
+        true,
+        ["sign"]
+      );
+      
+      return key;
+      
+    } catch(e){}
+
+    //
+    //
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // RAW PUBLIC - PERVERTED
+    //
+    //
+    try {
+
+      longKey = new Uint8Array([4].concat(Array.from(this.base64ToArray(unknown_key))));
+      key = await window.crypto.subtle.importKey(
+        "raw",
+        longKey,
+        { name: "ECDSA", namedCurve: "P-256" },
+        true,
+        ["sign"]
+      );
+      
+      return key;
+      
+    } catch(e){}
+    
+    
+    throw new Error("UNRECOGNIZED KEY FORMAT");
+        
+        
+  }
+
   
   
 }

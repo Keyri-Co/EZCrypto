@@ -3,14 +3,89 @@
   import {EZCrypto} from "./index.js";
   let ez = new EZCrypto();
   
+
+
+  let yourKeys = await ez.EcMakeCryptKeys(false);
+  let myKeys = await ez.EcMakeCryptKeys(false);
   
-  let keys = await ez.EcMakeCryptKeys();
-  let encryptedData = await ez.HKDFEncrypt(keys.privateKey, keys.publicKey, ez.arrayToBase64(new TextEncoder().encode("THEY'RE ALL GOOD PUPS. AND THEY SAVED THE DAY. AND NOW IT'S TIME TO PLAY AROUND ADVENTURE BAY")))
-  let decryptedData = await ez.HKDFDecrypt(keys.privateKey, keys.publicKey, encryptedData.salt, encryptedData.ciphertext);
   
-  
-  console.log({keys, encryptedData, "decrypted": new TextDecoder().decode(decryptedData)});
+  let encryptedData = await ez.HKDFEncrypt(yourKeys.privateKey, myKeys.publicKey, ez.arrayToBase64(new TextEncoder().encode("THEY'RE ALL GOOD PUPS. AND THEY SAVED THE DAY. AND NOW IT'S TIME TO PLAY AROUND ADVENTURE BAY")))
+  let decryptedData = await ez.HKDFDecrypt(myKeys.privateKey, yourKeys.publicKey, encryptedData.salt, encryptedData.iv, encryptedData.ciphertext);
+
+  console.log({yourKeys, myKeys, encryptedData, "decrypted": new TextDecoder().decode(decryptedData)});
 
 
 
+  let andy = {
+    "data": "TWVzc2FnZSB0byBzaWdu",
+    "pub": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEycsKDzCUSaK7ww2xY2Nj27g3sVA4qexRwdbeSgc5Xnkco/lHILZcPvzwDpKeqKPUeTVawVheuWucj34N2zLtKA==",
+    "sig": "MEUCIHQMzM9Mj/GrQVQ22bx92jzGvlOPq09Cec8+a2V//9W7AiEA8XTNqvNoRenshj5QqtIC6XtdRPAQC/YTLu97nJA22PU="
+  };
+
+  let adit = {
+    "data": "cHxC6YIArNrGU4l9lKyEyEY8sN0tFzV8Gm3yvQ0Srb6evWNGsIn7TGBddPSK2z6/owU=",
+    "pub": "WDe0bg3lTqdEeafrYI2sxsc9OKtkW37Ix0WPm2sDt1NfHcbCzJR4Hm+tPH5Za0Yn7AXIwM+2qqqpx/9zxytmRQ==",
+    "sig": "MLTLaYxDfDf8u70tURYhVSPxvgyFBFcsLc5XfDEoqlaADmK6lou8O19/v8QyJYgh8tV2ZPR9vf3T3jpDD35MPw=="
+  };
+  
+
+  
+  let output = await ez.EcVerifySig(andy.pub, andy.sig, andy.data);
+  console.log(output);
+  
+  let mySigKeys = await ez.EcMakeSigKeys();
+  
+  let mySig = await ez.EcSignData(mySigKeys.privateKey, ez.arrayToBase64(new TextEncoder().encode("SOFA-KING TIRED")));
+  
+  console.log({mySig});
+  
+  let validity = await ez.EcVerifySig(mySigKeys.publicKey, mySig, ez.arrayToBase64(new TextEncoder().encode("SOFA-KING TIRED")));
+  
+  console.log(validity);
+  
+
+  
+/*
+  // This works on all devices/browsers, and uses IndexedDBShim as a final fallback 
+  var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+
+  // Open (or create) the database
+  var open = indexedDB.open("MyDatabase", 1);
+
+  // Create the schema
+  open.onupgradeneeded = function() {
+      var db = open.result;
+      var store = db.createObjectStore("MyObjectStore", {keyPath: "id"});
+      var index = store.createIndex("NameIndex", ["name.last", "name.first"]);
+  };
+
+  open.onsuccess = function() {
+      // Start a new transaction
+      var db = open.result;
+      var tx = db.transaction("MyObjectStore", "readwrite");
+      var store = tx.objectStore("MyObjectStore");
+      var index = store.index("NameIndex");
+
+      // Add some data
+      store.put({id: 12345, name: {first: "John", last: "Doe", "keys": yourKeys}, age: 42});
+      store.put({id: 67890, name: {first: "Bob", last: "Smith", "keys": myKeys}, age: 35});
+      
+      // Query the data
+      var getJohn = store.get(12345);
+      var getBob = index.get(["Smith", "Bob"]);
+
+      getJohn.onsuccess = function() {
+          console.log(getJohn.result.name);  // => "John"
+      };
+
+      getBob.onsuccess = function() {
+          console.log(getBob.result.name.first);   // => "Bob"
+      };
+
+      // Close the db when the transaction is done
+      tx.oncomplete = function() {
+          db.close();
+      };
+  }
+*/
 </script>
