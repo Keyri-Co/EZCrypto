@@ -562,10 +562,15 @@ export class EZCrypto {
     // 1.) convert the given keys to real keys in the most
     //     generic way possible...
     let publicKey = await this.EcdhConvertKey(b64Public);
+    console.log({b64Public, publicKey});
+    
     let privateKey = await this.EcdhConvertKey(b64Private);
+    console.log({b64Private,privateKey});
+    
     let salt = this.base64ToArray(b64Salt);
     let iv = this.base64ToArray(b64iv);
     let data = this.base64ToArray(b64data);
+    console.log({b64Salt,b64iv,b64data});
     
     
     // 2.) generate shared secret for HKDF
@@ -575,6 +580,8 @@ export class EZCrypto {
       "namedCurve": "P-256", 
       "public": publicKey 
     },privateKey,256);
+    let nSharedSecret = this.arrayToBase64(new Uint8Array(sharedSecret));
+    console.log({nSharedSecret});
     
     // 3.) convert shared-secret into a key
     //
@@ -584,7 +591,7 @@ export class EZCrypto {
       false, 
       ['deriveKey','deriveBits']
     );
-    
+    console.log({sharedSecretKey});
     
     // 4.) convert the live-shared-secret-key into an aes key
     //
@@ -596,16 +603,11 @@ export class EZCrypto {
       sharedSecretKey,256
     );
     
+    let n_derivedKey = this.arrayToBase64(new Uint8Array(derivedKey));
+    console.log({n_derivedKey});
+    
     //
     // 5.) 
-    //   ___  __  __ _____ ____
-    //  / _ \|  \/  |  ___/ ___|
-    // | | | | |\/| | |_ | |  _
-    // | |_| | |  | |  _|| |_| |
-    //  \___/|_|  |_|_|   \____|
-    //
-    // THIS SHOULD NOT BE THIS HARD!
-    //
     //     Convert the Key-Array to a live Key
     let aes_key = await window.crypto.subtle.importKey(
       "raw",
@@ -614,16 +616,28 @@ export class EZCrypto {
       true,
       ["encrypt","decrypt"]
     );
-    
+
+    let n_aes_key = await window.crypto.subtle.exportKey("raw", aes_key);
+    n_aes_key = this.arrayToBase64(new Uint8Array(n_aes_key));
+    console.log({n_aes_key});
 
 
     // 6.) decrypt our data
     //
-    return await window.crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: iv },
-      aes_key,
-      data
-    );
+    try{
+      let aes_data = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        aes_key,
+        data
+      );
+    } catch(e){
+      console.log({e});
+    }
+    
+    console.log({aes_data});
+    
+    return aes_data;
+    
   };
   
   
@@ -780,7 +794,6 @@ export class EZCrypto {
     //
     //
     try {
-      
       key = await window.crypto.subtle.importKey(
         "spki",
         this.base64ToArray(unknown_key),
@@ -788,7 +801,6 @@ export class EZCrypto {
         true,
         []
       );
-      
       return key;
 
     } catch(e){}
@@ -800,7 +812,6 @@ export class EZCrypto {
     //
     //
     try {
-      
       key = await window.crypto.subtle.importKey(
         "raw",
         this.base64ToArray(unknown_key),
@@ -808,7 +819,6 @@ export class EZCrypto {
         true,
         []
       );
-
       return key;
       
     } catch(e){}
@@ -820,7 +830,6 @@ export class EZCrypto {
     //
     //
     try{
-      
       key = await window.crypto.subtle.importKey(
         "pkcs8",
         this.base64ToArray(unknown_key),
@@ -828,6 +837,7 @@ export class EZCrypto {
         true,
         ["deriveKey","deriveBits"]
       );
+      return key;
       
     } catch(e){}
     //
@@ -847,11 +857,13 @@ export class EZCrypto {
         true,
         []
       );
+      return key;
       
-    } catch(e){}
+    } catch(e){
+      throw new Error("UNRECOGNIZED KEY FORMAT");
+    }
 
 
-    throw new Error("UNRECOGNIZED KEY FORMAT");
 
   }
 
@@ -925,7 +937,7 @@ export class EZCrypto {
         true,
         ["verify"]
       );
-      
+
       return key;
       
     } catch(e){}
@@ -946,7 +958,7 @@ export class EZCrypto {
         true,
         ["sign"]
       );
-      
+
       return key;
       
     } catch(e){}
@@ -968,15 +980,13 @@ export class EZCrypto {
         true,
         ["sign"]
       );
-      
+
       return key;
       
-    } catch(e){}
-    
-    
-    throw new Error("UNRECOGNIZED KEY FORMAT");
-        
-        
+    } catch(e){
+      throw new Error("UNRECOGNIZED KEY FORMAT");
+    }
+
   }
 
   

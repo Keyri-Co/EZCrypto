@@ -1,14 +1,393 @@
-<!DOCTYPE html>
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <!-- Required meta tags -->
+        <title>Encrypt. Decrypt. Sign. Verify.</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    
+        <style>
+            .nav-link{
+                border: solid 2px;
+                border-radius: 10px;
+            }
+            
+            
+            .bd-example {
+                position: relative;
+                padding: 1rem;
+                margin: 1rem -0.75rem 0;
+                border: solid #dee2e6;
+                border-width: 1px 0 0;
+                text-align: left;
+            }
+            
+
+            .work-button{
+              width: 100%;
+              color: #0d6efd;
+              border: solid 2px;
+              border-radius: 10px;
+              text-align: center;
+            }
+            
+        </style>
+    
+    
+    </head>
+
+    <body>
+
+
+        <header>
+            <div class="navbar navbar-dark bg-dark shadow-sm">
+                <div class="container">
+                    <a href="#" class="navbar-brand d-flex align-items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" 
+                            width="20" 
+                            height="20" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            stroke-linecap="round" 
+                            stroke-linejoin="round" 
+                            stroke-width="2" 
+                            aria-hidden="true" 
+                            class="me-2" 
+                            viewBox="0 0 24 24">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        <strong>Encrypt. Decrypt. Sign. Verify.</strong>
+                    </a>
+                    <button 
+                        class="navbar-toggler" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#navbarHeader" 
+                        aria-controls="navbarHeader" 
+                        aria-expanded="false" 
+                        aria-label="Toggle navigation">
+                        
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT OF THE PAGE -->
+        <main>
+
+
+            <!-- TABS SECTION -->
+            <section class="py-5 container">
+                
+
+                <div class="row">
+                
+                    <!-- NAV COLUMN -->
+                    <div class="col-md-2 text-center ">
+                        <ul class="nav flex-column" id="myTab" role="tablist">
+                        
+                          <li class="nav-item py-2" role="presentation">
+                            <a role="button"
+                                class="nav-link active" 
+                                id="home-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#home" 
+                                role="tab" 
+                                aria-controls="home" 
+                                aria-selected="false">Home</a>
+                          </li>
+                        
+                          <li class="nav-item py-2" role="presentation">
+                            <a role="button"
+                                class="nav-link" 
+                                id="aes-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#aes" 
+                                role="tab" 
+                                aria-controls="aes" 
+                                aria-selected="true">Symmetric - Encryption</a>
+                          </li>
+                          
+                          <li class="nav-item py-2" role="presentation">
+                            <a role="button"
+                                class="nav-link" 
+                                id="hkdf-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#hkdf" 
+                                role="tab" 
+                                aria-controls="hkdf" 
+                                aria-selected="false">Asymmetric-Encryption</a>
+                          </li>
+                          
+                          <li class="nav-item py-2" role="presentation">
+                            <a role="button"
+                                class="nav-link" 
+                                id="decrypt-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#decrypt" 
+                                role="tab" 
+                                aria-controls="decrypt" 
+                                aria-selected="false">Asymmetric-Signature</a>
+                          </li>
+
+                        </ul>
+                    </div>
+                    <!-- /// /// /// NAV COLUMN -->
+                    
+                    <!-- NAV CONTENT -->
+                    <div class="tab-content col-md-10">
+                    
+        <!-- ---------------------------------------------------------------- -->
+        <!-- ---------------------------------------------------------------- -->
+        <!-- ---------------------------------------------------------------- -->
+        <!-- HOME TAB ======================================================= -->
+                        <div class="tab-pane fade show active text-center " id="home" role="tabpanel" aria-labelledby="home-tab">
+                            <div class="row py-lg-5">
+                                <div class="col-lg-6 col-md-8 mx-auto">
+                                    <h1 class="fw-light">Encrypt. Decrypt. Sign. Verify.</h1>
+                                    <p class="lead text-muted">Demonstration of built-in browser cryptography - <strong>without</strong> a ton of config.</p>
+                                </div>
+                            </div>
+                        </div>
+        <!-- ---------------------------------------------------------------- -->
+        <!-- ---------------------------------------------------------------- -->
+        <!-- ---------------------------------------------------------------- -->
+                        
+                        
+                        
+        <!-- ---------------------------------------------------------------- -->
+        <!-- ---------------------------------------------------------------- -->
+        <!-- ---------------------------------------------------------------- -->
+        <!-- AES FUNCTIONS ================================================== -->
+                        <div class="tab-pane fade text-center " id="aes" role="tabpanel" aria-labelledby="aes-tab">
+                            <div class="row py-lg-5">
+                                <form id="aes-form" class="col-lg-6 col-md-8 mx-auto">
+                                    <h1 class="fw-light">AES (SYMMETRIC-KEY)</h1>
+
+                                    <div class="bd-example">
+                                      <div class="mb-3">
+                                        <label for="aes-key" class="form-label">AES-Key-Data</label>
+                                        <textarea class="form-control" id="aes-key" name="aes-key" placeholder="base64 aes key goes here"></textarea>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                        <label for="aes-plaintext" class="form-label">Plain-Text</label>
+                                        <textarea class="form-control" id="aes-plaintext" name="aes-plaintext"rows="10" placeholder="Your Text Goes Here"></textarea>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                        <label for="aes-encrypted" class="form-label">Encrypted Text</label>
+                                        <textarea class="form-control" id="aes-encrypted" name="aes-encrypted" placeholder="Your key JSON goes here" rows="10"></textarea>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                        <a class="btn btn-lg work-button" onclick="aesSolve();">SOLVE</a>
+                                      </div>
+                                      
+                                    </div>
+                                </form>
+                            </div>
+                          </div>
+
+        <!-- ---------------------------------------------------------------- -->
+        <!-- ---------------------------------------------------------------- -->
+        <!-- ---------------------------------------------------------------- -->
+
+
+
+        <!-- ----------------------------------------------------------------- -->
+        <!-- ----------------------------------------------------------------- -->
+        <!-- ----------------------------------------------------------------- -->
+        <!-- HKDF FUNCTIONS ================================================== -->
+                        <div class="tab-pane fade text-center " id="hkdf" role="tabpanel" aria-labelledby="hkdf-tab">
+                            <div class="row py-lg-5">
+                                <h1 class="fw-light">ECDH - HKDF (ASYMMETRIC-KEY)</h1>
+                                
+                                <form id="hkdf-me" class="col-lg-5 col-md-5 mx-auto">
+
+                                    <div class="bd-example">
+                                      <div class="mb-3">
+                                        <label for="ecdh-pub" class="form-label">ECDH-Public-Key</label>
+                                        <textarea class="form-control" id="aes-key" name="aes-key" placeholder="vlrpA88fFnqigqOUHe8UsCVTcScAeH/efNyaU03qGyI="></textarea>
+                                      </div>
+                                      
+                                      <div class="ecdh-priv">
+                                        <label for="aes-key" class="form-label">ECDH-Private-Key</label>
+                                        <textarea class="form-control" id="aes-key" name="aes-key" placeholder="vlrpA88fFnqigqOUHe8UsCVTcScAeH/efNyaU03qGyI="></textarea>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                        <label for="ecdh-plaintext" class="form-label">Plain-Text</label>
+                                        <textarea class="form-control" id="aes-plaintext" name="aes-plaintext"rows="10" placeholder="Text Goes Here"></textarea>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                        <label for="aes-encrypted" class="form-label">Encrypted Text</label>
+                                        <textarea class="form-control" id="aes-encrypted" name="aes-encrypted" rows="10"></textarea>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                        <a class="btn btn-lg work-button" onclick="aesSolve();">SOLVE</a>
+                                      </div>
+                                      
+                                    </div>
+                                </form>
+                                
+                                
+                                
+                                <form id="hkdf-you" class="col-lg-5 col-md-5 mx-auto">
+
+                                    <div class="bd-example">
+                                      <div class="mb-3">
+                                        <label for="aes-key" class="form-label">AES-Key-Data</label>
+                                        <textarea class="form-control" id="aes-key" name="aes-key" placeholder="vlrpA88fFnqigqOUHe8UsCVTcScAeH/efNyaU03qGyI="></textarea>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                        <label for="aes-plaintext" class="form-label">Plain-Text</label>
+                                        <textarea class="form-control" id="aes-plaintext" name="aes-plaintext"rows="10" placeholder="EXIT LIGHT. ENTER NIGHT. TAKE MY HAND. WE'RE OFF TO NEVER NEVER LAND."></textarea>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                        <label for="aes-encrypted" class="form-label">Encrypted Text</label>
+                                        <textarea class="form-control" id="aes-encrypted" name="aes-encrypted" rows="10"></textarea>
+                                      </div>
+                                      
+                                      <div class="mb-3">
+                                        <a class="btn btn-lg work-button" onclick="aesSolve();">SOLVE</a>
+                                      </div>
+                                      
+                                    </div>
+                                </form>
+                                
+                            </div>
+                          </div>
+        <!-- ----------------------------------------------------------------- -->
+        <!-- ----------------------------------------------------------------- -->
+        <!-- ----------------------------------------------------------------- -->
+                        
+                        
+                        
+                    </div>
+                </div>
+                <!-- /// /// /// NAV CONTENT -->
+            </section>
+        </main>
+    </body>
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+
 <script type="module">
   import {EZCrypto} from "./index.js";
-  let ez = new EZCrypto();
+  window.KryptKeeper = new EZCrypto();
+</script>
+
+<script>
+  // ////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////
+  //
+  //     _    _____ ____
+  //    / \  | ____/ ___|
+  //   / _ \ |  _| \___ \
+  //  / ___ \| |___ ___) |
+  // /_/   \_|_____|____/
+  //
+  //
+  // ////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////
+  aesSolve = async () => {
+    // Put all of our form data in a single object, and do logic
+    let form = document.querySelector('#aes-form');
+    
+    let formData = Object.fromEntries(
+      Array.from(
+        new FormData(form)
+      )
+    );
+    
+    //
+    // No Key? Give them a key...
+    //
+    if(formData["aes-key"] == ""){
+      formData["aes-key"] = await KryptKeeper.AESMakeKey();
+      form["aes-key"].value = formData["aes-key"];
+    }
+
+    // Do they have something to be encrypted?
+    // Encrypt it.
+    //
+    if(formData["aes-plaintext"] !== ""){
+    
+      let b64plain = btoa(formData["aes-plaintext"]);
+      formData["aes-encrypted"] = await KryptKeeper.AESEncrypt(formData["aes-key"], b64plain);
+      form["aes-encrypted"].value = JSON.stringify(formData["aes-encrypted"],"<br/>"," ");
+      formData["aes-plaintext"] == "";
+      form["aes-plaintext"].value = "";
+      
+    } else if(formData["aes-encrypted"] !== ""){
+      
+      try{
+        formData["aes-encrypted"] = JSON.parse(formData["aes-encrypted"]);
+      } catch(e){
+        alert("The Encrypted Text Must Be A JSON with :ciphertext and :iv");
+        throw new error({e});
+      }
+      
+      let data = await KryptKeeper.AESDecrypt(formData["aes-key"], formData["aes-encrypted"].iv, formData["aes-encrypted"].ciphertext);
+      formData["aes-plaintext"] = new TextDecoder().decode(data);
+      form["aes-plaintext"].value = formData["aes-plaintext"];
+      formData["aes-encrypted"] !== "";
+      form["aes-encrypted"].value = "";
+      
+    }
+  
+  }
+  
+  
+  
+  
+  
+  // ////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////
+  //
+  //   _____ ____ ____  _   _       _   _ _  ______  _____
+  //  | ____/ ___|  _ \| | | |     | | | | |/ |  _ \|  ___|
+  //  |  _|| |   | | | | |_| |_____| |_| | ' /| | | | |_
+  //  | |__| |___| |_| |  _  |_____|  _  | . \| |_| |  _|
+  //  |_____\____|____/|_| |_|     |_| |_|_|\_|____/|_|
+  //  
+  //
+  // ////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////
+  
+  
+  
+  
+  
+  
+  
+</script>
+<script>
+/*
+
+  let privateKey = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglPhAAPHfJHiwSXYyRdYvMYPlsf3n5+jCtBwG9joZfYWhRANCAARheJdsvZHRZI/W1xD8JUDQAIqY92umwUmndnZSqhVYF/Ag0851wGIFJjgegFKe+OA94ijf43KIvOYJASItfKu3";
+  let publicKey = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+UxViGWDtCBkYafoW/Ac3b0ZuQgcetiJin3pReFZ2GVGkdi5QG7F4UUe0k6gstVxfFmn2998WuqPQ3+3vo/zIA==";
+  let salt = "15+w5VZ+I2Smj8en";
+  let iv = "15+w5VZ+I2Smj8en";
+  let cipher = "MuFhLpgTeebVj2/FfHcFXmlDOMzLMcBlhscwrQ==";
+  
+  let decrypted = await ez.HKDFDecrypt(privateKey, publicKey, salt, iv, cipher);
+  
+  console.log(new TextDecoder().decode(decrypted));
   
 
-
-  let yourKeys = await ez.EcMakeCryptKeys(false);
-  let myKeys = await ez.EcMakeCryptKeys(false);
-  
-  
   let encryptedData = await ez.HKDFEncrypt(yourKeys.privateKey, myKeys.publicKey, ez.arrayToBase64(new TextEncoder().encode("THEY'RE ALL GOOD PUPS. AND THEY SAVED THE DAY. AND NOW IT'S TIME TO PLAY AROUND ADVENTURE BAY")))
   let decryptedData = await ez.HKDFDecrypt(myKeys.privateKey, yourKeys.publicKey, encryptedData.salt, encryptedData.iv, encryptedData.ciphertext);
 
@@ -29,9 +408,15 @@
   };
   
 
+  try{
+  let output = await ez.EcVerifySig(adit.pub, adit.sig, adit.data);
+  console.log({output});
+  }catch(e){console.log(e);}
   
-  let output = await ez.EcVerifySig(andy.pub, andy.sig, andy.data);
-  console.log(output);
+  try{
+  let outputs = await ez.EcVerifySig(andy.pub, andy.sig, andy.data);
+  console.log({outputs});
+  }catch(e){console.log(e)}
   
   let mySigKeys = await ez.EcMakeSigKeys();
   
