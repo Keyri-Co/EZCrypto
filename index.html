@@ -209,27 +209,23 @@
 
                                     <div class="bd-example">
                                       <div class="mb-3">
-                                        <label for="ecdh-pub" class="form-label">ECDH-Public-Key</label>
-                                        <textarea class="form-control" id="aes-key" name="aes-key" placeholder="vlrpA88fFnqigqOUHe8UsCVTcScAeH/efNyaU03qGyI="></textarea>
+                                        <label for="ecdh-pub" class="form-label"><strong>YOUR</strong>-ECDH-Public-Key</label>
+                                        <textarea class="form-control" id="me-ecdh-pub" name="me-ecdh-pub" placeholder="--base64 key here"></textarea>
                                       </div>
                                       
-                                      <div class="ecdh-priv">
-                                        <label for="aes-key" class="form-label">ECDH-Private-Key</label>
-                                        <textarea class="form-control" id="aes-key" name="aes-key" placeholder="vlrpA88fFnqigqOUHe8UsCVTcScAeH/efNyaU03qGyI="></textarea>
+                                      <div class="mb3">
+                                        <label for="ecdh-priv" class="form-label"><strong>YOUR</strong>-ECDH-Private-Key</label>
+                                        <textarea class="form-control" id="me-ecdh-priv" name="me-ecdh-priv" placeholder="--base64 key here"></textarea>
                                       </div>
                                       
-                                      <div class="mb-3">
+                                      <div class="mb-3" style="margin-top: 10px;">
                                         <label for="ecdh-plaintext" class="form-label">Plain-Text</label>
-                                        <textarea class="form-control" id="aes-plaintext" name="aes-plaintext"rows="10" placeholder="Text Goes Here"></textarea>
+                                        <textarea class="form-control" id="ecdh-plaintext" name="ecdh-plaintext"rows="10" placeholder="Text Goes Here"></textarea>
                                       </div>
                                       
                                       <div class="mb-3">
-                                        <label for="aes-encrypted" class="form-label">Encrypted Text</label>
+                                        <label for="hkdf-encrypted" class="form-label">Encrypted Text</label>
                                         <textarea class="form-control" id="aes-encrypted" name="aes-encrypted" rows="10"></textarea>
-                                      </div>
-                                      
-                                      <div class="mb-3">
-                                        <a class="btn btn-lg work-button" onclick="aesSolve();">SOLVE</a>
                                       </div>
                                       
                                     </div>
@@ -241,13 +237,8 @@
 
                                     <div class="bd-example">
                                       <div class="mb-3">
-                                        <label for="aes-key" class="form-label">AES-Key-Data</label>
-                                        <textarea class="form-control" id="aes-key" name="aes-key" placeholder="vlrpA88fFnqigqOUHe8UsCVTcScAeH/efNyaU03qGyI="></textarea>
-                                      </div>
-                                      
-                                      <div class="mb-3">
-                                        <label for="aes-plaintext" class="form-label">Plain-Text</label>
-                                        <textarea class="form-control" id="aes-plaintext" name="aes-plaintext"rows="10" placeholder="EXIT LIGHT. ENTER NIGHT. TAKE MY HAND. WE'RE OFF TO NEVER NEVER LAND."></textarea>
+                                        <label for="ecdh-pub" class="form-label"><strong>THEIR</strong>-ECDH-Public-Key</label>
+                                        <textarea class="form-control" id="them-ecdh-pub" name="them-ecdh-pub" placeholder="--base64 key here"></textarea>
                                       </div>
                                       
                                       <div class="mb-3">
@@ -255,13 +246,14 @@
                                         <textarea class="form-control" id="aes-encrypted" name="aes-encrypted" rows="10"></textarea>
                                       </div>
                                       
-                                      <div class="mb-3">
-                                        <a class="btn btn-lg work-button" onclick="aesSolve();">SOLVE</a>
-                                      </div>
                                       
                                     </div>
                                 </form>
                                 
+                                <div class="mb-3">
+                                  <a class="btn btn-lg work-button" onclick="hkdfSolve();">SOLVE</a>
+                                </div>
+
                             </div>
                           </div>
         <!-- ----------------------------------------------------------------- -->
