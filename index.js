@@ -160,7 +160,7 @@ export class EZCrypto {
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-  async AESEncrypt(base_64_key, base_64_data) {
+  async AESEncrypt(base_64_key, base_64_data, base_64_nonce = false) {
     
     // 1.) Convert out from base64 to array
     let aes_ary = this.base64ToArray(base_64_key);
@@ -175,7 +175,13 @@ export class EZCrypto {
     );
 
     // 3.) Create a nonce why not?
-    let nonce = window.crypto.getRandomValues(new Uint8Array(16));
+    let nonce;
+    
+    if(base_64_nonce){
+      nonce = this.base64ToArray(base_64_nonce);
+    } else {
+      nonce = window.crypto.getRandomValues(new Uint8Array(16));
+    }
 
     // 4.) encrypt our data
     let encrypted = await window.crypto.subtle.encrypt(
@@ -280,34 +286,42 @@ export class EZCrypto {
       
     } else {
       exportKeys = await Promise.all([
+        //
           window.crypto.subtle.exportKey("spki", keys.publicKey).then((key) => {
             return this.arrayToBase64(new Uint8Array(key));
           }),
-          (new Promise((s,j) => {return s(keys.privateKey)})),
-          window.crypto.subtle.exportKey("jwk", keys.publicKey).then((key) => {
-            return (key);
-          }),
-          (new Promise((s,j) => {return s(keys.privateKey)})),
+        //
+        (new Promise((s,j) => {return s(keys.privateKey)})),
+        //
           window.crypto.subtle.exportKey("raw", keys.publicKey).then((key) => {
             return this.arrayToBase64( new Uint8Array(key));
           }),
+        //
           window.crypto.subtle.exportKey("raw", keys.publicKey).then((key) => {
             return this.arrayToBase64( new Uint8Array(key).slice(1,1000));
           })
       ]);
     }
 
-    
+    if(exportable){
+      return { 
+        publicKey: exportKeys[0], 
+        privateKey: exportKeys[1], 
+        jwkPublicKey: exportKeys[2], 
+        jwkPrivateKey: exportKeys[3], 
+        rawPublicKey: exportKeys[4],
+        rawPublicKeyLite: exportKeys[5]
+      };
+    } else {
+        return { 
+          publicKey: exportKeys[0], 
+          privateKey: exportKeys[1], 
+          rawPublicKey: exportKeys[2], 
+          rawPublicKeyLite: exportKeys[3]
+        };
+    }
 
     // Step 3) Convert the keys to base64 and return...
-    return { 
-      publicKey: exportKeys[0], 
-      privateKey: exportKeys[1], 
-      jwkPublicKey: exportKeys[2], 
-      jwkPrivateKey: exportKeys[3], 
-      rawPublicKey: exportKeys[4],
-      rawPublicKeyLite: exportKeys[5]
-    };
   };
 
   // //////////////////////////////////////////////////////////////////////////
@@ -492,12 +506,6 @@ export class EZCrypto {
     
     //
     // 6.) 
-    //   ___  __  __ _____ ____
-    //  / _ \|  \/  |  ___/ ___|
-    // | | | | |\/| | |_ | |  _
-    // | |_| | |  | |  _|| |_| |
-    //  \___/|_|  |_|_|   \____|
-    //
     // THIS SHOULD NOT BE THIS HARD!
     //
     //     Convert the Key-Array to a live Key
@@ -562,15 +570,12 @@ export class EZCrypto {
     // 1.) convert the given keys to real keys in the most
     //     generic way possible...
     let publicKey = await this.EcdhConvertKey(b64Public);
-    console.log({b64Public, publicKey});
     
     let privateKey = await this.EcdhConvertKey(b64Private);
-    console.log({b64Private,privateKey});
     
     let salt = this.base64ToArray(b64Salt);
     let iv = this.base64ToArray(b64iv);
     let data = this.base64ToArray(b64data);
-    console.log({b64Salt,b64iv,b64data});
     
     
     // 2.) generate shared secret for HKDF
@@ -580,8 +585,6 @@ export class EZCrypto {
       "namedCurve": "P-256", 
       "public": publicKey 
     },privateKey,256);
-    let nSharedSecret = this.arrayToBase64(new Uint8Array(sharedSecret));
-    console.log({nSharedSecret});
     
     // 3.) convert shared-secret into a key
     //
@@ -591,7 +594,6 @@ export class EZCrypto {
       false, 
       ['deriveKey','deriveBits']
     );
-    console.log({sharedSecretKey});
     
     // 4.) convert the live-shared-secret-key into an aes key
     //
@@ -602,10 +604,7 @@ export class EZCrypto {
       "info": new Uint8Array([])},
       sharedSecretKey,256
     );
-    
-    let n_derivedKey = this.arrayToBase64(new Uint8Array(derivedKey));
-    console.log({n_derivedKey});
-    
+
     //
     // 5.) 
     //     Convert the Key-Array to a live Key
@@ -617,27 +616,21 @@ export class EZCrypto {
       ["encrypt","decrypt"]
     );
 
-    let n_aes_key = await window.crypto.subtle.exportKey("raw", aes_key);
-    n_aes_key = this.arrayToBase64(new Uint8Array(n_aes_key));
-    console.log({n_aes_key});
-
-
     // 6.) decrypt our data
     //
+    let aes_data;
     try{
-      let aes_data = await window.crypto.subtle.decrypt(
+        aes_data = await window.crypto.subtle.decrypt(
         { name: "AES-GCM", iv: iv },
         aes_key,
         data
       );
     } catch(e){
-      console.log({e});
+      console.log({name: e.name, stack: e.stack, message: e.message});
     }
-    
-    console.log({aes_data});
-    
+
     return aes_data;
-    
+
   };
   
   

@@ -107,7 +107,7 @@
                                 data-bs-target="#aes" 
                                 role="tab" 
                                 aria-controls="aes" 
-                                aria-selected="true">Symmetric - Encryption</a>
+                                aria-selected="true">Symmetric</a>
                           </li>
                           
                           <li class="nav-item py-2" role="presentation">
@@ -118,7 +118,7 @@
                                 data-bs-target="#hkdf" 
                                 role="tab" 
                                 aria-controls="hkdf" 
-                                aria-selected="false">Asymmetric-Encryption</a>
+                                aria-selected="false">Asymmetric</a>
                           </li>
                           
                           <li class="nav-item py-2" role="presentation">
@@ -129,7 +129,7 @@
                                 data-bs-target="#decrypt" 
                                 role="tab" 
                                 aria-controls="decrypt" 
-                                aria-selected="false">Asymmetric-Signature</a>
+                                aria-selected="false">Signatures</a>
                           </li>
 
                         </ul>
@@ -209,22 +209,22 @@
 
                                     <div class="bd-example">
                                       <div class="mb-3">
-                                        <label for="ecdh-pub" class="form-label"><strong>YOUR</strong>-ECDH-Public-Key</label>
-                                        <textarea class="form-control" id="me-ecdh-pub" name="me-ecdh-pub" placeholder="--base64 key here"></textarea>
+                                        <label for="me-ecdh-pub" class="form-label"><strong>YOUR</strong>-ECDH-Public-Key</label>
+                                        <textarea class="form-control" id="me-ecdh-pub" name="me-ecdh-pub" rows="3" placeholder="--base64 key here"></textarea>
                                       </div>
                                       
                                       <div class="mb3">
-                                        <label for="ecdh-priv" class="form-label"><strong>YOUR</strong>-ECDH-Private-Key</label>
-                                        <textarea class="form-control" id="me-ecdh-priv" name="me-ecdh-priv" placeholder="--base64 key here"></textarea>
+                                        <label for="me-ecdh-priv" class="form-label"><strong>YOUR</strong>-ECDH-Private-Key</label>
+                                        <textarea rows="4" class="form-control" id="me-ecdh-priv" name="me-ecdh-priv" placeholder="--base64 key here ***NEVER EVER SHARE***"></textarea>
                                       </div>
                                       
                                       <div class="mb-3" style="margin-top: 10px;">
-                                        <label for="ecdh-plaintext" class="form-label">Plain-Text</label>
+                                        <label for="me-ecdh-plaintext" class="form-label">Plain-Text</label>
                                         <textarea class="form-control" id="ecdh-plaintext" name="ecdh-plaintext"rows="10" placeholder="Text Goes Here"></textarea>
                                       </div>
                                       
                                       <div class="mb-3">
-                                        <label for="hkdf-encrypted" class="form-label">Encrypted Text</label>
+                                        <label for="me-hkdf-encrypted" class="form-label">Encrypted Text</label>
                                         <textarea class="form-control" id="aes-encrypted" name="aes-encrypted" rows="10"></textarea>
                                       </div>
                                       
@@ -233,12 +233,18 @@
                                 
                                 
                                 
-                                <form id="hkdf-you" class="col-lg-5 col-md-5 mx-auto">
+                                <form id="hkdf-them" class="col-lg-5 col-md-5 mx-auto">
 
                                     <div class="bd-example">
+
                                       <div class="mb-3">
-                                        <label for="ecdh-pub" class="form-label"><strong>THEIR</strong>-ECDH-Public-Key</label>
-                                        <textarea class="form-control" id="them-ecdh-pub" name="them-ecdh-pub" placeholder="--base64 key here"></textarea>
+                                        <label for="them-ecdh-pub" class="form-label"><strong>THEIR</strong>-ECDH-Public-Key</label>
+                                        <input class="form-control" id="them-ecdh-pub" name="them-ecdh-pub" placeholder="--base64 key here"></input>
+                                      </div>
+
+                                      <div class="mb-3">
+                                        <label for="them-ecdh-priv" class="form-label"><strong>THEIR</strong>-ECDH-Private-Key</label>
+                                        <input class="form-control" type="password" id="them-ecdh-priv" name="them-ecdh-priv" disabled placeholder="YOU PUT NOTHING HERE!"></input>
                                       </div>
                                       
                                       <div class="mb-3">
@@ -342,7 +348,7 @@
   
   
   
-  
+  // MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+UxViGWDtCBkYafoW/Ac3b0ZuQgcetiJin3pReFZ2GVGkdi5QG7F4UUe0k6gstVxfFmn2998WuqPQ3+3vo/zIA==
   
   // ////////////////////////////////////////////////////////////////////////
   // ////////////////////////////////////////////////////////////////////////
@@ -358,7 +364,49 @@
   // ////////////////////////////////////////////////////////////////////////
   // ////////////////////////////////////////////////////////////////////////
   // ////////////////////////////////////////////////////////////////////////
+  hkdfSolve = async () => {
   
+    //
+    // 1.) Let's load up forms into something we can use...
+    //
+    const myForm = document.querySelector("#hkdf-me");
+    const themForm = document.querySelector("#hkdf-them");
+    
+    let myFormData = Object.fromEntries(
+      Array.from(
+        new FormData(myForm)
+      )
+    );
+    
+    let themFormData = Object.fromEntries(
+      Array.from(
+        new FormData(themForm)
+      )
+    );
+    
+    //
+    // 2.) IF myKeys are blank, create / load them
+    //
+    let myKeys;
+    
+    if(myFormData["me-ecdh-priv"] == ""){
+    
+      myKeys = await KryptKeeper.EcMakeCryptKeys();
+    
+      myFormData["me-ecdh-priv"] == myKeys.privateKey;
+      myForm["me-ecdh-priv"].value = myKeys.privateKey;
+      
+      myFormData["me-ecdh-pub"] = myKeys.rawPublicKeyLite;
+      myForm["me-ecdh-pub"].value = myKeys.rawPublicKeyLite;
+    }
+    
+    console.log({myFormData, themFormData})
+  
+    
+  
+  
+  
+  }
   
   
   
