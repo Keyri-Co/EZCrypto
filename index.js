@@ -16,6 +16,7 @@ class EZCrypto {
       this.#crypto = require("crypto").webcrypto;
     } else {
       this.#crypto = window.crypto;
+      this.#crypto.CryptoKey = window.CryptoKey;
     }
   }
 
@@ -802,7 +803,7 @@ class EZCrypto {
     // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     // NATURAL KEY
-    if(unknown_key instanceof CryptoKey){
+    if(unknown_key instanceof this.#crypto.CryptoKey){
       return unknown_key;
     }
     //
@@ -914,7 +915,7 @@ class EZCrypto {
     // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     // NATURAL KEY
-    if(unknown_key instanceof CryptoKey){
+    if(unknown_key instanceof this.#crypto.CryptoKey){
       return unknown_key;
     }
     
