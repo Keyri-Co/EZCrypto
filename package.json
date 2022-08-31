@@ -15,5 +15,6 @@
   "bugs": {
     "url": "https://github.com/Keyri-Co/EZCrypto/issues"
   },
-  "homepage": "https://github.com/Keyri-Co/EZCrypto#readme"
+  "homepage": "https://github.com/Keyri-Co/EZCrypto#readme",
+  "type": "module"
 }

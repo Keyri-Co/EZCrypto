@@ -6,7 +6,7 @@
 // easier and more obvious
 //
 
-class EZCrypto {
+export default class EZCrypto {
   
   #crypto;
   
