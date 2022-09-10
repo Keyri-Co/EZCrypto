@@ -11,9 +11,11 @@ export default class EZCrypto {
   #crypto;
   
   constructor() {
-    
-    if(typeof window == "undefined"){
-      this.#crypto = require("crypto").webcrypto;
+       
+    if(typeof window == "undefined"){ 
+      if(typeof require !== "undefined"){
+        this.#crypto = require("crypto").webcrypto;
+      }
     } else {
       this.#crypto = window.crypto;
       this.#crypto.CryptoKey = window.CryptoKey;
@@ -1015,7 +1017,3 @@ export default class EZCrypto {
 // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-if(typeof window === "undefined"){
-  module.exports = EZCrypto;
-}
