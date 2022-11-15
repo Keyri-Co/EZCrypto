@@ -134,21 +134,28 @@ export default class EZCrypto {
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-  AESMakeKey = async () => {
+  AESMakeKey = async (exportable = true) => {
     await this.#sleep(0);
 
     // 1.) Generate the Key
     let key = await this.#crypto.subtle.generateKey(
       { name: "AES-GCM", length: 256 },
-      true,
+      exportable,
       ["encrypt", "decrypt"]
     );
 
-    // 2.) Export to Array Buffer
-    let out = await this.#crypto.subtle.exportKey("raw", key);
 
-    // 3.) Return it as b64
-    return this.arrayToBase64(new Uint8Array(out));
+    // 2.) 
+    if(exportable){
+      //Return it as b64 if its exportable
+      
+      out = await this.#crypto.subtle.exportKey("raw", key);
+      return this.arrayToBase64(new Uint8Array(out));
+    } else {
+      // else return the CryptoKey Object
+      
+      return key;
+    }
   };
   
   
@@ -166,17 +173,23 @@ export default class EZCrypto {
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-  AESImportKey = async (base64) => {
+  AESImportKey = async (aes_key, exportable = true) => {
     await this.#sleep(0);
 
-    // 1.) Generate the Key
-    return await this.#crypto.subtle.importKey(
-        "raw",
-        this.base64ToArray(base64).buffer,
-        "AES-GCM",
-        true,
-        ["encrypt", "decrypt"]
-      );
+
+    if(aes_key instanceof this.#crypto.CryptoKey){
+      return aes_key;
+    } else {
+
+      // 1.) Generate the Key
+      return await this.#crypto.subtle.importKey(
+          "raw",
+          this.base64ToArray(base64).buffer,
+          "AES-GCM",
+          exportable,
+          ["encrypt", "decrypt"]
+        );
+    }
   };
 
   // //////////////////////////////////////////////////////////////////////////
@@ -196,18 +209,10 @@ export default class EZCrypto {
 
   async AESEncrypt(base_64_key, base_64_data, base_64_nonce = false) {
     await this.#sleep(0);
+    
+    // 0.) Pass Key to 
+    let aes_key = await this.AESImportKey(base_64_key);
 
-    // 1.) Convert out from base64 to array
-    let aes_ary = this.base64ToArray(base_64_key);
-
-    // 2.) Convert the Key-Array to a live Key
-    let aes_key = await this.#crypto.subtle.importKey(
-      "raw",
-      aes_ary.buffer,
-      "AES-GCM",
-      true,
-      ["encrypt"]
-    );
 
     // 3.) Create a nonce why not?
     let nonce;
@@ -252,18 +257,11 @@ export default class EZCrypto {
     await this.#sleep(0);
 
     // 1.) Convert out from base64 to array
-    let aes_ary = this.base64ToArray(base_64_key);
+    let aes_key = await this.AESImportKey(base_64_key);
     let nonce_ary = this.base64ToArray(base_64_nonce);
     let cipher_ary = this.base64ToArray(base_64_cipher);
 
-    // 2.) Convert the Key-Array to a live Key
-    let aes_key = await this.#crypto.subtle.importKey(
-      "raw",
-      aes_ary.buffer,
-      "AES-GCM",
-      true,
-      ["decrypt"]
-    );
+
 
     // 3.) Decrypt
     return await this.#crypto.subtle.decrypt(
