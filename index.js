@@ -149,7 +149,7 @@ export default class EZCrypto {
     if(exportable){
       //Return it as b64 if its exportable
       
-      out = await this.#crypto.subtle.exportKey("raw", key);
+      let out = await this.#crypto.subtle.exportKey("raw", key);
       return this.arrayToBase64(new Uint8Array(out));
     } else {
       // else return the CryptoKey Object
@@ -184,7 +184,7 @@ export default class EZCrypto {
       // 1.) Generate the Key
       return await this.#crypto.subtle.importKey(
           "raw",
-          this.base64ToArray(base64).buffer,
+          this.base64ToArray(aes_key).buffer,
           "AES-GCM",
           exportable,
           ["encrypt", "decrypt"]
