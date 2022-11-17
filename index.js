@@ -298,22 +298,33 @@ export default class EZCrypto {
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-  async AESDecrypt(base_64_key, base_64_nonce, base_64_cipher) {
+  async AESDecrypt(base_64_key, base_64_nonce, base_64_cipher, returnText = false) {
     await this.#sleep(0);
 
     // 1.) Convert out from base64 to array
     let aes_key = await this.AESImportKey(base_64_key);
     let nonce_ary = this.base64ToArray(base_64_nonce);
     let cipher_ary = this.base64ToArray(base_64_cipher);
+    let decrypted;
 
 
 
     // 3.) Decrypt
-    return await this.#crypto.subtle.decrypt(
+    decrypted = await this.#crypto.subtle.decrypt(
       { name: "AES-GCM", iv: nonce_ary },
       aes_key,
       cipher_ary
     );
+
+    if(!returnText){
+      return decrypted;
+    } else {
+      decrypted = new Uint8Array(decrypted);
+
+      decrypted = new TextDecoder().decode(decrypted);
+
+      return decrypted;
+    }
   }
 
   // //////////////////////////////////////////////////////////////////////////
