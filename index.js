@@ -120,6 +120,51 @@ export default class EZCrypto {
     return str;
   }
 
+
+  // //////////////////////////////////////////////////////////////////////////
+  // //////////////////////////////////////////////////////////////////////////
+  //
+  // Function:     HASH (static) (async)
+  // What is this: The digest() method of the SubtleCrypto interface generates a digest of the given data. 
+  //               A digest is a short fixed-length value derived from some variable-length input.
+  //               Cryptographic digests should exhibit collision-resistance, meaning that it's hard to come up 
+  //               with two different inputs that have the same digest value.
+  //
+  // Arguments:    algo - this is the string you're hashing for
+  //               data   - This is the algorithm you're using to hash the data with (SHA-1, SHA-256, SHA-384, SHA-512)
+  //
+  // Returns:      the hash of the data you provided as a base64 string
+  //
+  // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  HASH = async (algo, data, len) => {
+
+    let hash = await this.#crypto.subtle.digest(algo, new TextEncoder().encode(data));
+    
+    let ary = new Uint8Array(hash);
+
+    let outAry;
+
+    if(len){
+      // initialize outAry to the desired size
+      outAry = new Uint8Array(len,0);
+
+      let min = Math.min(len, ary.length);
+      let max = Math.max(len, ary.length);
+
+      for(var i = 0; i < max; i++){
+        outAry[i%len] = outAry[i%len] ^ ary[i%ary.length];
+      }
+    } else {
+      outAry = ary;
+    }
+
+    return this.arrayToBase64(new Uint8Array(outAry));
+
+  }
+
+
+
   // //////////////////////////////////////////////////////////////////////////
   // //////////////////////////////////////////////////////////////////////////
   //
@@ -396,7 +441,7 @@ export default class EZCrypto {
       { name: "ECDH", public: publicKey },
       privateKey,
       { name: "AES-GCM", length: 256 },
-      true,
+      false,
       ["encrypt", "decrypt"]
     )
     
@@ -449,7 +494,7 @@ export default class EZCrypto {
       { name: "ECDH", public: publicKey },
       privateKey,
       { name: "AES-GCM", length: 256 },
-      true,
+      false,
       ["encrypt", "decrypt"]
     );
 
@@ -551,7 +596,7 @@ export default class EZCrypto {
       "raw",
       derivedKey,
       "AES-GCM",
-      true,
+      false,
       ["encrypt","decrypt"]
     );
     
@@ -651,7 +696,7 @@ export default class EZCrypto {
       "raw",
       derivedKey,
       "AES-GCM",
-      true,
+      false,
       ["encrypt","decrypt"]
     );
 
@@ -885,7 +930,7 @@ export default class EZCrypto {
         "pkcs8",
         this.base64ToArray(unknown_key),
         { name: "ECDH", namedCurve: "P-256" },
-        true,
+        false,
         ["deriveKey","deriveBits"]
       );
       return key;
@@ -1007,7 +1052,7 @@ export default class EZCrypto {
         "pkcs8",
         this.base64ToArray(unknown_key),
         { name: "ECDSA", namedCurve: "P-256" },
-        true,
+        false,
         ["sign"]
       );
 
