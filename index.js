@@ -11,13 +11,17 @@ export default class EZCrypto {
   #crypto;
   
   constructor() {
-   
-    if(typeof window == "undefined"){    
+    if(typeof window == "undefined" && typeof self == "undefined"){
       this.#nodeEnvLoad();
     } else {
-      this.#crypto = window.crypto;
-      this.#crypto.CryptoKey = window.CryptoKey;
-    }
+      try{
+        this.#crypto = window?.crypto;
+        this.#crypto.CryptoKey = window?.CryptoKey;
+      } catch(e){
+        this.#crypto = self?.crypto;
+        this.#crypto.CryptoKey = self?.CryptoKey;
+      }
+    } 
   }
 
   // //////////////////////////////////////////////////////////////////////////
