@@ -460,13 +460,7 @@ export default class EZCrypto {
       ["encrypt", "decrypt"]
     )
     
-    // 3.) convert it out to data-array
-    let aes_key_raw = await this.#crypto.subtle.exportKey("raw",aes_key);
-    
-    // 4.) convert that to base64
-    let b64_aes_key = this.arrayToBase64(new Uint8Array(aes_key_raw));
-    
-    // 5.) Work smarter, not harder, dummy...
+    // 3.) Work smarter, not harder, dummy...
     return await this.AESEncrypt(b64_aes_key, b64data);
   
   };
